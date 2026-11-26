@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | 🔬 En curso — etapa A |
+| Estado | 🔬 En curso — etapas A y B completas; faltan conclusiones |
 | Rama | `feature/spikeVoz` |
 | Código | `experiments/voz/` |
 | Equipo de pruebas | MacBook Pro M3 Pro, 18 GB, macOS — Python 3.11 |
@@ -322,6 +322,49 @@ Observaciones:
 **Estimado E2E con lo medido**: VAD (~300–500 ms) + STT (~720 ms) + LLM primera oración (~580 ms) + TTS (~240 ms)
 ≈ **1.8–2.0 s**, por encima de la meta de 1.5 s. Opciones a evaluar (ver §12):
 transcripción en streaming / generación anticipada en la etapa B, STT en la nube en streaming, o STT en la GPU de la PC.
+
+### 11.5 Etapa B — Conversación completa en LiveKit (2026-11-25)
+
+Script: `experiments/voz/agente_consola.py` (LiveKit Agents 1.9, modo consola, AirPods Pro).
+Flujo: Silero VAD (silencio mínimo 0.55 s) + detector de turnos multilingüe → mlx-whisper turbo + prompt de vocabulario
+(adaptador propio) → Claude Haiku 5.5 (thinking adaptive, effort low; prompt "empieza con una frase muy corta")
+→ ElevenLabs v4 Turbo. Generación anticipada del LLM activada.
+
+| Usuario | Desde la última palabra* | Fin de turno + STT | LLM TTFT | TTS primer audio |
+|---|---|---|---|---|
+| Dime quién eres | ~2.2 s | 1,275 ms | 449 ms | 242 ms |
+| *(hablado muy bajito → alucinación de Whisper)* | ~7.3 s | 6,289 ms | 508 ms | 247 ms |
+| Dime un dato curioso *(interrumpida)* | ~2.3 s | 1,307 ms | 459 ms | 245 ms |
+| Oye, ¿qué me recomiendas para cenar? | ~2.6 s | 1,351 ms | 482 ms | 195 ms |
+| Oye, apaga la luz | ~2.5 s | 1,377 ms | 544 ms | 198 ms |
+| Bueno, muchas gracias… | ~2.5 s | 1,408 ms | 537 ms | 238 ms |
+
+\* Tiempo desde que el VAD detecta el fin del habla hasta que Tessia empieza a sonar, más los 0.55 s de silencio mínimo del VAD.
+
+Observaciones:
+
+- **Latencia real ≈ 2.0–2.5 s** desde la última palabra (sin contar el turno con alucinación), por encima de la meta de 1.5 s.
+- **Experiencia subjetiva de Emilio: "me sorprendió completamente… casi no tarda nada en responderte"**, mucho más rápido
+  que la v1. El streaming de punta a punta y la frase inicial corta ("Claro.", "Con gusto.") hacen que se sienta inmediato.
+- **Cuello de botella: fin de turno + STT (~1.3 s)** = ~0.55 s de silencio del VAD + ~0.7 s de Whisper.
+  LLM (~0.5 s) y TTS (~0.2 s) son rápidos.
+- **Barge-in funciona** ✅: al interrumpirla dejó de hablar y atendió la nueva pregunta (sin el detector adaptativo
+  de LiveKit Cloud; basta el VAD).
+- **Hablar muy bajito provoca alucinaciones de Whisper** ("Neombúas en la tuco, El Arellí", 6.2 s). Tessia respondió
+  bien ("Perdón, no te entendí"). Mitigación futura: descartar transcripciones con baja probabilidad de voz.
+- **Proveedor propio dentro de LiveKit** ✅: el adaptador de mlx-whisper funcionó detrás de la interfaz `stt.STT`.
+- Sin herramientas, ante "apaga la luz" explica que no tiene control → esperado (herramientas MCP en fase 3).
+
+**Decisión: se mantiene el silencio mínimo del VAD en 0.55 s.** Bajarlo a ~0.3 s ahorraría ~250 ms, pero aumenta el
+riesgo de que Tessia interrumpa en pausas a media frase; Emilio prefiere que no lo interrumpa y la latencia actual
+se siente bien. Queda como ajuste disponible si en el uso diario se percibe lenta.
+
+Notas técnicas para el agente real:
+
+- El plugin de Anthropic de LiveKit exige el SDK `anthropic` 1.x y no expone `thinking`/`effort`
+  (se inyectaron con `extra_kwargs` en una subclase).
+- `livekit.plugins.turn_detector` y el modo `console` están marcados como obsoletos en 1.9; el detector de
+  interrupciones adaptativo requiere LiveKit Cloud.
 
 ## 12. Conclusiones y recomendación
 
