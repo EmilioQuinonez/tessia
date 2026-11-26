@@ -259,9 +259,30 @@ Observaciones:
 - **Piper, Kokoro y ElevenLabs caben en el presupuesto** (150–400 ms).
 - Los motores locales dependen de la longitud de la primera oración (L1 es el peor caso); ElevenLabs casi no, por su streaming.
 
-### 11.3 TTS — calificaciones de Emilio
+### 11.3 TTS — calificaciones de Emilio (2026-11-25)
 
-_Pendiente._
+Escucha de las 19 frases por motor (`salidas/tts/escuchar.html`). Evaluación cualitativa:
+
+| Lugar | Motor | Naturalidad | Pronunciación | Emociones | Comentarios |
+|---|---|---|---|---|---|
+| 1 | ElevenLabs Multilingual v2 | Excelente, "increíble" | Buena | ✅ Se notan sin exagerar | La mejor en general |
+| 2 | ElevenLabs Flash v2.5 | Muy buena | Buena; algunas frases suenan raras | ✅ Se detectan, a veces forzadas o muy marcadas | Muy por encima de los locales |
+| 3 | Kokoro `ef_dora` | Buena (voz conocida de la v1) | Buena | ❌ | La mejor local |
+| 4 | Piper `es_MX-claude-high` | Aceptable para su velocidad | ❌ Falla en acentos y algunas palabras | ❌ | Útil solo por rapidez |
+| 5 | Chatterbox (voz por defecto) | ❌ | ❌ | ❌ | Ruidos de fondo, habla en otro idioma, voz masculina |
+
+Conclusiones:
+
+- **Ninguna TTS local maneja emociones.** Solo ElevenLabs cumple el criterio de emociones (§7).
+- **ElevenLabs Multilingual v2 es la mejor voz** y aun así cabe en el presupuesto de latencia (345 ms p50);
+  Flash v2.5 es la alternativa rápida (179 ms) con algo menos de naturalidad.
+- **Chatterbox se descarta en la Mac** (calidad y latencia). La ronda 2 (clip mexicano CC0) no se corre en la Mac;
+  solo tendría sentido en la PC con CUDA, como experimento aparte.
+- **Kokoro queda como mejor opción local** (respaldo sin internet / respuestas cortas).
+
+**Implicación importante**: la decisión de la v2 asumía TTS local (Chatterbox) y que el único gasto sería el LLM.
+Si la voz principal es ElevenLabs, la voz pasa a ser **un gasto mensual en la nube** y deja de ser local.
+Hay que estimar el costo con uso real y considerar un esquema híbrido (ver §12).
 
 ## 12. Conclusiones y recomendación
 
