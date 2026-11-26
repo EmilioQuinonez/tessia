@@ -116,6 +116,8 @@ tessia/
 ## Convenciones
 
 - **Documentation-first**: escribir/actualizar docs antes o junto con el código.
+  Formato y reglas de los documentos: **[`docs/00-CONVENCIONES.md`](docs/00-CONVENCIONES.md)**;
+  experimentos nuevos a partir de `docs/experimentos/_plantilla.md`.
 - **Experimentos**: primero el documento (objetivo, método, métricas, criterios), luego el código en `experiments/`;
   resultados y conclusiones van al mismo documento. Lo reutilizable se reescribe bien en `agent/` con tests.
 - **Git**: Conventional Commits (`feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `style`);
