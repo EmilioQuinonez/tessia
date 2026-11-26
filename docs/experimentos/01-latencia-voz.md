@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | 🔬 En curso — etapas A y B completas; faltan conclusiones |
+| Estado | ✅ Completado (2026-11-26) |
 | Rama | `feature/spikeVoz` |
 | Código | `experiments/voz/` |
 | Equipo de pruebas | MacBook Pro M3 Pro, 18 GB, macOS — Python 3.11 |
@@ -368,4 +368,85 @@ Notas técnicas para el agente real:
 
 ## 12. Conclusiones y recomendación
 
-_Pendiente._
+**Veredicto: la arquitectura v2 funciona.** Con streaming de punta a punta, Tessia se siente inmediata
+("me sorprendió completamente… casi no tarda nada en responderte"), muy por encima de la v1.
+
+### 12.1 Respuestas a las preguntas del objetivo (§1)
+
+| Pregunta | Respuesta |
+|---|---|
+| ¿Qué STT local es mejor en Apple Silicon? | **mlx-whisper large-v3-turbo + prompt de vocabulario**: 4.9 % WER, ~716 ms. Small es rápido pero no entiende "Tessia". |
+| ¿Haiku responde rápido en streaming? | **Sí**: ~580 ms a la primera oración, respuestas cortas y con tono mexicano. Effort `low`; el thinking adaptativo no agrega latencia. |
+| ¿Qué TTS da el mejor balance? | **ElevenLabs v4 Turbo**: calidad de v4, ~240 ms, emociones, $0.04 por 1,000 caracteres. |
+| ¿Alguna TTS local se acerca a ElevenLabs? | **No.** Ninguna maneja emociones. Kokoro es la mejor local; Chatterbox no es viable en la Mac. |
+| ¿El flujo cabe en 1.5 s? | **No en números (~2.0–2.5 s), sí en experiencia.** El cuello de botella es fin de turno + STT (~1.3 s). |
+
+### 12.2 Criterios de éxito (§7)
+
+| Criterio | Resultado |
+|---|---|
+| Latencia E2E p50 ≤ 1.5 s | ❌ ~2.0–2.5 s (pero se percibe rápida; ver §12.5 para reducirla) |
+| Naturalidad ≥ 4/5 | ✅ v4 Turbo, mejor evaluada |
+| Pronunciación de nombre y anglicismos | ✅ con ElevenLabs |
+| Emociones distinguibles (≥ 4 de 7) | ✅ solo con ElevenLabs |
+| Proveedor propio en LiveKit | ✅ adaptador de mlx-whisper |
+| Barge-in (extra) | ✅ |
+
+### 12.3 Stack de voz elegido
+
+| Pieza | Elección | Alternativa / respaldo |
+|---|---|---|
+| VAD + turnos | Silero (silencio mínimo 0.55 s) + detector de turnos multilingüe de LiveKit | Solo VAD si el detector no corre bien en el servidor |
+| STT | Depende del servidor (§12.4): mlx-whisper turbo en Apple Silicon, o **ElevenLabs Scribe Realtime** (nube) | — |
+| LLM | **Claude Haiku 5.5**, thinking adaptativo, effort `low`, respuestas de 1–2 oraciones que empiezan con una frase corta | — |
+| TTS | **ElevenLabs v4 Turbo** | Kokoro `ef_dora` (local) para modo sin internet |
+| Orquestación | LiveKit Agents 1.9 | — |
+
+### 12.4 Cambios respecto al plan original de la v2
+
+1. **La voz principal pasa a la nube.** El plan asumía Chatterbox local; en la Mac es ~4× más lento que tiempo real,
+   con ruidos y alucinaciones, y ninguna TTS local maneja emociones. → ElevenLabs v4 Turbo.
+2. **La voz deja de ser gratis.** El supuesto "el único gasto es el LLM" ya no aplica: la TTS es ~85 % del costo.
+3. **El servidor ya no necesita GPU NVIDIA.** Al salir la TTS de lo local, lo único pesado es el STT.
+   - **Recomendado ahora: Raspberry Pi 5** (24/7, barato, bajo consumo) con **STT en la nube (Scribe Realtime)**,
+     porque Whisper turbo sería demasiado lento en la Pi. Ventaja extra: el STT en streaming bajaría ~500 ms la latencia.
+     Contra: la voz del usuario sale de casa (privacidad controlada, coherente con la v2).
+   - **Alternativa futura: Mac mini** (desde $19,999 MXN): STT local y acceso nativo a Apple Music, Recordatorios y Atajos.
+4. **Funciones de Apple vía un agente en la Mac.** Música y Atajos solo están disponibles cuando la Mac está prendida;
+   lo esencial no debe depender de ella: foco por Home Assistant (Matter), calendario por CalDAV, correo por IMAP,
+   y **recordatorios propios de Tessia** con avisos push al iPhone. El iPhone actúa como cliente, no como ejecutor
+   (iOS no permite agentes permanentes en segundo plano).
+
+### 12.5 Costos estimados (precios consultados el 2026-11-25)
+
+Fuentes: [ElevenLabs](https://elevenlabs.io/pricing/api), [Anthropic](https://platform.claude.com/docs/en/about-claude/pricing),
+[Apple México](https://www.apple.com/mx/shop/buy-mac/mac-mini).
+
+- **ElevenLabs**: todos los planes incluyen API; v4 Turbo consume la mitad de créditos que v4 (rinde el doble de caracteres).
+  Free: 20,000 caracteres de v4 Turbo al mes (sin licencia comercial) · **Starter $6/mes: 150,000** (con licencia comercial)
+  · Creator $22/mes: 550,000. Pago por uso equivalente: $0.04 por 1,000 caracteres.
+  Scribe Realtime (STT): $0.22 por hora de audio, solo mientras se le habla (nunca transmitir 24/7: ~$160/mes).
+- **Claude Haiku 5.5**: $0.10 / $0.50 por millón de tokens (entrada/salida); caché del prompt a $0.01 por millón
+  → ~$0.0003 por turno con caché.
+
+Supuesto: ~120 caracteres hablados por respuesta.
+
+| Escenario | Voz | LLM (con caché) | STT nube | **Total al mes** |
+|---|---|---|---|---|
+| Desarrollo | Free | ~$0.10 | incluido en Free | **~$0** |
+| Ligero (~20 respuestas/día) | Starter $6 | ~$0.20 | ~$0.10 | **~$6** |
+| Medio (~50/día) | $7–22 | ~$0.50 | ~$0.30 | **~$8–23** |
+| Familia intenso (~150/día) | Creator $22 | ~$1.50 | ~$1 | **~$25** |
+
+Compra única: Raspberry Pi 5 + SSD (por cotizar) o Mac mini M6 16 GB/256 GB ($19,999 MXN · $899 USD).
+Pendiente verificar en el panel de ElevenLabs los caracteres reales por plan (su página es inconsistente entre créditos y caracteres).
+
+### 12.6 Pendientes y siguientes pasos
+
+- **Experimento 02 (corto)**: Scribe Realtime en español con las grabaciones de §11.4 (latencia, WER, nombre). Cabe en las horas gratuitas.
+- **Experimento 03**: el agente corriendo en una Raspberry Pi 5 (VAD, detector de turnos, LiveKit, consumo).
+- **Filtrar alucinaciones de Whisper** con audio débil (probabilidad de "no voz"); en Scribe, revisar su equivalente.
+- **Etiquetas de emoción** de v4 Turbo: probar que el LLM marque la emoción por oración (`[alegre] …`) sin romper el streaming.
+- **Migrar lo obsoleto de LiveKit 1.9** en el agente real: modo `console` → `lk agent console`;
+  `livekit.plugins.turn_detector` → `livekit.agents.inference.TurnDetector`.
+- **Actualizar `CLAUDE.md`** (tabla del stack, costos, hardware) y escribir `docs/03-ARQUITECTURA.md` con estas decisiones.
