@@ -13,3 +13,5 @@ jiwer            # WER del STT
 sounddevice      # micrófono/bocinas
 soundfile
 python-dotenv
+# Etapa B: agente de voz (fija anthropic 1.x por compatibilidad con el plugin)
+livekit-agents[silero,anthropic,elevenlabs,turn-detector]~=1.9
