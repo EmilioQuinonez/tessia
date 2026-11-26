@@ -15,7 +15,7 @@ si una regla estorba más de lo que ayuda, se cambia aquí.
 |---|---|
 | `00-CONVENCIONES.md` | Este archivo: cómo se escriben los docs |
 | `01-VISION.md` | Qué es Tessia, para quién y qué problema resuelve |
-| `02-SRS.md` | Requisitos funcionales y no funcionales |
+| `02-SRS.md` | Objetivos SMART, requisitos, reglas de negocio y de información (ver §8) |
 | `03-ARQUITECTURA.md` | Componentes, flujos y decisiones técnicas |
 | `04-PLAN-CALIDAD.md` | Cómo se prueba y se mide la calidad |
 | `05-SETUP.md` | Cómo instalar y correr el proyecto |
@@ -90,9 +90,62 @@ Los experimentos agregan los campos `Rama`, `Código` y `Equipo de pruebas` (ver
 5. **Al terminar**: estado ✅, código congelado, lo reutilizable se reescribe bien en `agent/` con tests,
    y se actualiza `CLAUDE.md`. Salidas, audios y modelos nunca se suben.
 
-## 7. Variables de entorno (propuesta)
+## 7. Variables de entorno
 
-- Cada componente tiene **su propio** `.env.example` junto a su código (`agent/.env.example`, `dashboard/.env.example`,
-  `experiments/<nombre>/.env.example`), con **solo** las variables que usa. Así cada pieza tiene únicamente las llaves que necesita.
-- `infra/docker-compose.yml` asigna a cada servicio su archivo con `env_file:`.
+- **Un solo `.env` en la raíz del repo** para todo el proyecto (las API keys son las mismas para todos los componentes),
+  con su `.env.example` en la raíz documentando cada variable y qué componente la usa.
+- `docker compose` lo lee automáticamente; el código lo carga desde la raíz.
+- **Excepción**: los experimentos (`experiments/<nombre>/`) son autocontenidos y desechables, así que llevan su propio
+  `.env.example` (al borrarlos no quedan variables huérfanas).
 - Variables en `UPPER_SNAKE_CASE`, sin comillas ni espacios alrededor del `=`. El `.env` real nunca se sube.
+
+## 8. Contenido mínimo de cada documento
+
+Identificadores con prefijo y número de dos dígitos para poder referenciarlos y trazarlos entre documentos:
+`OBJ-01` (objetivos), `RF-01` (requisitos funcionales), `RNF-01` (no funcionales), `RN-01` (reglas de negocio),
+`RI-01` (reglas de información), `CU-01` (casos de uso), `ADR-01` (decisiones de arquitectura).
+Un identificador nunca se reutiliza; si algo se elimina, se marca como ~~descartado~~ con la razón.
+
+### 01-VISION
+
+Problema y contexto (incluida la historia de la v1), propuesta de valor, usuarios (personas de la familia),
+alcance y fuera de alcance, principios de diseño, riesgos principales y métricas de éxito del producto.
+
+### 02-SRS — Especificación de requisitos de software
+
+1. **Introducción**: propósito del documento, alcance del sistema, definiciones y acrónimos, referencias.
+2. **Objetivos SMART** (`OBJ-xx`): cada uno **E**specífico, **M**edible, **A**lcanzable, **R**elevante y con **T**iempo definido.
+   Ejemplo: "OBJ-01: Para el 2027-03-31, Tessia responde por voz en ≤ 2.5 s (p50) desde la última palabra del usuario,
+   medido en 50 turnos reales en casa."
+3. **Descripción general**: perspectiva del producto (diagrama de contexto), funciones principales, tipos de usuario y
+   sus características, entorno de operación (dispositivos), restricciones, supuestos y dependencias (servicios externos).
+4. **Requisitos funcionales** (`RF-xx`): qué hace el sistema. Cada uno con descripción, prioridad **MoSCoW**
+   (Must / Should / Could / Won't), criterio de aceptación verificable y origen (objetivo o caso de uso).
+5. **Requisitos no funcionales** (`RNF-xx`): rendimiento (latencia), disponibilidad, seguridad y privacidad,
+   usabilidad (voz, español mexicano), mantenibilidad, portabilidad (multi-dispositivo) y costo. Siempre medibles.
+6. **Reglas de negocio** (`RN-xx`): políticas que el sistema debe respetar independientemente de la tecnología.
+   Ej.: "RN-01: Las acciones que envían información fuera de casa (correo, mensajes) requieren confirmación verbal."
+7. **Reglas de información** (`RI-xx`): qué datos se manejan, su origen, formato, validaciones, quién puede verlos,
+   retención y borrado. Ej.: "RI-01: Las grabaciones de voz no se almacenan; solo la transcripción, por 30 días."
+8. **Casos de uso / historias de usuario** (`CU-xx`): actor, precondiciones, flujo principal, flujos alternos y postcondiciones.
+9. **Matriz de trazabilidad**: objetivo → requisito → caso de uso → prueba.
+
+### 03-ARQUITECTURA
+
+Vista general (diagrama de componentes), flujo de un turno de voz, despliegue (qué corre en cada dispositivo),
+interfaces entre componentes (proveedores, MCP), datos y almacenamiento, seguridad,
+y **decisiones de arquitectura** (`ADR-xx`: contexto, decisión, alternativas, consecuencias), enlazando a los experimentos que las respaldan.
+
+### 04-PLAN-CALIDAD
+
+Estrategia de pruebas (unitarias, integración, de voz/latencia, manuales), herramientas, criterios de aceptación
+por requisito (enlazados a `RF`/`RNF`), métricas de calidad y cómo se reportan.
+
+### 05-SETUP
+
+Requisitos de hardware y software, instalación paso a paso, variables de entorno (`.env.example`),
+cómo correr cada componente y solución de problemas comunes.
+
+### 06-ROADMAP
+
+Fases con objetivo, entregables, criterio de terminado y estado; enlaces a los PR y experimentos de cada fase.
