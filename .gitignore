@@ -14,8 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -221,3 +219,39 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node (dashboard)
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+
+# Secretos (se permite la plantilla)
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Modelos y datos locales (anclados a la raíz)
+/models/
+/data/
+/recordings/
+*.onnx
+*.pt
+*.safetensors
+*.gguf
+*.bin
+*.ckpt
+
+# Audio (nunca subir grabaciones)
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Salidas de experimentos
+experiments/**/salidas/
+
+# Sistema
+.DS_Store
