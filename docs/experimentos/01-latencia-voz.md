@@ -196,7 +196,11 @@ experiments/voz/
 
 - Las frases con el nombre de Emilio se envían a **Anthropic** y **ElevenLabs**; las grabaciones de voz **no** salen de la Mac.
 - ElevenLabs: el set de frases cabe en el límite mensual del plan gratuito.
-- Anthropic: Haiku con respuestas cortas; costo estimado de centavos de dólar para todo el experimento.
+- Anthropic: **único modelo permitido `claude-haiku-5-5`** (Claude Haiku 5.5, $0.10 / $0.50 por millón de tokens de entrada/salida).
+  - El ID va fijo en una constante; los scripts no aceptan otro modelo.
+  - `max_tokens` limitado (respuestas habladas cortas) y número de llamadas fijo.
+  - Cada script muestra el número de llamadas y el costo estimado **antes** de ejecutar y pide confirmación.
+  - Estimado de la etapa A: ~100 llamadas → **menos de $0.05 USD**.
 
 ## 10. Qué pasa con el experimento al terminar
 
