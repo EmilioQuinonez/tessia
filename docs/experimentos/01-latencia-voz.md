@@ -246,7 +246,9 @@ Locales: síntesis oración por oración, TTFA = primera oración. ElevenLabs: s
 |---|---|---|---|---|
 | Piper `es_MX-claude-high` | Local, CPU | **62 ms** | 130 ms | 0.02 |
 | ElevenLabs Flash v2.5 | Nube | **179 ms** | 399 ms | — |
+| ElevenLabs v4 Turbo | Nube | **240 ms** | 423 ms | — |
 | ElevenLabs Multilingual v2 | Nube | **345 ms** | 475 ms | — |
+| ElevenLabs v4 | Nube | **590 ms** | 889 ms | — |
 | Kokoro `ef_dora` | Local, CPU | **350 ms** | 735 ms | 0.12 |
 | Chatterbox Multilingual (voz por defecto) | Local, GPU Mac (MPS) | **14.5 s** | 131 s | 4.14 |
 
@@ -256,7 +258,10 @@ Observaciones:
   Además, en E6 generó 13.7 s de audio para una frase de ~3 s (alucinación/silencio largo, revisar al escuchar).
   Para usarlo en conversación se necesita GPU NVIDIA (la PC) → pendiente medirlo ahí.
   **Implicación de hardware**: una Mac mini como servidor no podría correr Chatterbox en tiempo real.
-- **Piper, Kokoro y ElevenLabs caben en el presupuesto** (150–400 ms).
+- **Piper, Kokoro y ElevenLabs (salvo v4) caben en el presupuesto** (150–400 ms).
+- **ElevenLabs v4 (590 ms) se sale del presupuesto** para conversación; solo serviría para audio no interactivo.
+- v4 Turbo y v4 se agregaron en una segunda corrida tras revisar la lista oficial de modelos
+  (precios por 1,000 caracteres: Flash v2.5 y v4 Turbo $0.04; Multilingual v2 y v4 $0.08).
 - Los motores locales dependen de la longitud de la primera oración (L1 es el peor caso); ElevenLabs casi no, por su streaming.
 
 ### 11.3 TTS — calificaciones de Emilio (2026-11-25)
@@ -265,17 +270,19 @@ Escucha de las 19 frases por motor (`salidas/tts/escuchar.html`). Evaluación cu
 
 | Lugar | Motor | Naturalidad | Pronunciación | Emociones | Comentarios |
 |---|---|---|---|---|---|
-| 1 | ElevenLabs Multilingual v2 | Excelente, "increíble" | Buena | ✅ Se notan sin exagerar | La mejor en general |
-| 2 | ElevenLabs Flash v2.5 | Muy buena | Buena; algunas frases suenan raras | ✅ Se detectan, a veces forzadas o muy marcadas | Muy por encima de los locales |
-| 3 | Kokoro `ef_dora` | Buena (voz conocida de la v1) | Buena | ❌ | La mejor local |
-| 4 | Piper `es_MX-claude-high` | Aceptable para su velocidad | ❌ Falla en acentos y algunas palabras | ❌ | Útil solo por rapidez |
-| 5 | Chatterbox (voz por defecto) | ❌ | ❌ | ❌ | Ruidos de fondo, habla en otro idioma, voz masculina |
+| 1 | **ElevenLabs v4 Turbo** | Excelente; "suena igual que v4" | Buena | ✅ | "Mil veces mejor que Flash v2.5". **Ganador** |
+| 1 | ElevenLabs v4 | Excelente | Buena | ✅ | Igual a v4 Turbo, pero 590 ms y el doble de precio |
+| 2 | ElevenLabs Multilingual v2 | Excelente, "increíble" | Buena | ✅ Se notan sin exagerar | La mejor de la primera corrida |
+| 3 | ElevenLabs Flash v2.5 | Muy buena | Buena; algunas frases suenan raras | ✅ Se detectan, a veces forzadas o muy marcadas | Muy por encima de los locales |
+| 4 | Kokoro `ef_dora` | Buena (voz conocida de la v1) | Buena | ❌ | La mejor local |
+| 5 | Piper `es_MX-claude-high` | Aceptable para su velocidad | ❌ Falla en acentos y algunas palabras | ❌ | Útil solo por rapidez |
+| 6 | Chatterbox (voz por defecto) | ❌ | ❌ | ❌ | Ruidos de fondo, habla en otro idioma, voz masculina |
 
 Conclusiones:
 
 - **Ninguna TTS local maneja emociones.** Solo ElevenLabs cumple el criterio de emociones (§7).
-- **ElevenLabs Multilingual v2 es la mejor voz** y aun así cabe en el presupuesto de latencia (345 ms p50);
-  Flash v2.5 es la alternativa rápida (179 ms) con algo menos de naturalidad.
+- **ElevenLabs v4 Turbo es la TTS elegida**: calidad de v4 (la máxima), 240 ms p50, $0.04 por 1,000 caracteres
+  (igual que Flash) y soporte de etiquetas de audio para emociones (a probar en la etapa B).
 - **Chatterbox se descarta en la Mac** (calidad y latencia). La ronda 2 (clip mexicano CC0) no se corre en la Mac;
   solo tendría sentido en la PC con CUDA, como experimento aparte.
 - **Kokoro queda como mejor opción local** (respaldo sin internet / respuestas cortas).
