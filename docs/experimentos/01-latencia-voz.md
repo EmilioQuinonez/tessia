@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | 📝 Planeado |
+| Estado | 🔬 En curso — etapa A |
 | Rama | `feature/spikeVoz` |
 | Código | `experiments/voz/` |
 | Equipo de pruebas | MacBook Pro M3 Pro, 18 GB, macOS — Python 3.11 |
@@ -212,7 +212,30 @@ experiments/voz/
 
 ## 11. Resultados
 
-_Pendiente._
+### 11.1 LLM — Claude Haiku 5.5 (2026-11-25)
+
+Script: `experiments/voz/llm_bench.py`. 5 preguntas × 10 repeticiones × 2 configuraciones (100 llamadas + 2 de calentamiento),
+`max_tokens=400`, streaming, desde la red de casa en la Mac. Costo real: **$0.006 USD** (13,130 tokens de entrada / 9,598 de salida).
+
+| Configuración | TTFT p50 / p90 | Primera oración p50 / p90 | Total p50 / p90 | Tokens de salida (prom.) |
+|---|---|---|---|---|
+| `sin_thinking` (thinking deshabilitado, effort low) | 362 / 644 ms | 600 / 990 ms | 960 / 1250 ms | 93 |
+| `thinking_low` (adaptive, effort low) | 358 / 608 ms | 578 / 817 ms | 828 / 1433 ms | 99 |
+
+Observaciones:
+
+- **Ambas configuraciones rinden igual** en la mediana: con effort `low`, el razonamiento adaptativo casi no se activa en preguntas sencillas.
+  La diferencia entre preguntas (480–980 ms) es mayor que la diferencia entre configuraciones.
+- **Primera oración ≈ 600 ms (p50)**: en el límite alto del presupuesto estimado (300–600 ms).
+- **Respuestas con primera oración larga tardan más** (p. ej. la receta: ~980 ms). Idea para la etapa B: pedir en el prompt
+  una primera frase corta ("Claro, …") y/o cortar para la TTS también en comas y dos puntos.
+- **Formato correcto**: 100/100 terminaron en `end_turn`, sin markdown ni listas, 2.2 oraciones en promedio (máx. 3).
+  Tono mexicano natural ("jitomate", "Ay, qué bueno que me lo pides").
+- **Precisión**: la diferencia horaria con Australia fue aproximada/imprecisa → datos que cambian (hora, clima, agenda)
+  deben venir de herramientas, no del conocimiento del modelo.
+
+**Decisión preliminar**: usar `thinking_low` (adaptive, effort `low`). Misma latencia y deja margen para razonar cuando
+haya herramientas. Se revalida en la etapa B.
 
 ## 12. Conclusiones y recomendación
 
