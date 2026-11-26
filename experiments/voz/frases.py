@@ -39,3 +39,15 @@ FRASES: list[Frase] = [
     Frase("E6", "emocion", "Tranquilo, todo está bajo control. Respira.", "calma"),
     Frase("E7", "emocion", "¡Vámonos! Hoy va a ser un gran día.", "entusiasmo"),
 ]
+
+# Órdenes típicas que Emilio le diría a Tessia (solo para STT; §4.3)
+ORDENES: list[Frase] = [
+    Frase("O1", "orden", "Tessia, apaga la luz de la sala."),
+    Frase("O2", "orden", "Pon música de Natalia Lafourcade."),
+    Frase("O3", "orden", "¿Qué tengo mañana en la agenda?"),
+    Frase("O4", "orden", "Recuérdame llamar al doctor el jueves a las 5 de la tarde."),
+    Frase("O5", "orden", "Sube el volumen al 70 %."),
+]
+
+# Todo lo que se graba para la prueba de STT
+FRASES_STT: list[Frase] = FRASES + ORDENES
