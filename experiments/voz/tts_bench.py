@@ -50,7 +50,8 @@ DIR_SALIDA = Path(__file__).parent / "salidas" / "tts"
 MOTORES_LOCALES = ["kokoro", "piper", "chatterbox"]
 TODOS = MOTORES_LOCALES + ["elevenlabs"]
 
-ELEVEN_MODELOS = ["eleven_flash_v2_5", "eleven_multilingual_v2"]  # rápido vs. calidad
+ELEVEN_MODELOS = ["eleven_flash_v2_5", "eleven_multilingual_v2"]  # rápido vs. calidad (por defecto)
+# Otros disponibles: eleven_v4_turbo (tiempo real, emotivo), eleven_v4 (máxima calidad)
 
 SEPARADOR_ORACIONES = re.compile(r"(?<=[.!?…])\s+")
 
@@ -160,13 +161,13 @@ def correr_local(motor: str) -> list[Medicion]:
 # --- ElevenLabs ---------------------------------------------------------------
 
 
-def correr_elevenlabs(confirmar: bool) -> list[Medicion]:
+def correr_elevenlabs(confirmar: bool, modelos: list[str]) -> list[Medicion]:
     from elevenlabs.client import ElevenLabs
 
     voz = os.environ.get("ELEVENLABS_VOICE_ID") or "EXAVITQu4vr4xnSDxMaL"
     caracteres = sum(len(f.texto) for f in FRASES)
-    print(f"\n▶ elevenlabs: voz {voz}, modelos {ELEVEN_MODELOS}")
-    print(f"  {len(FRASES)} frases × {len(ELEVEN_MODELOS)} modelos = {caracteres * len(ELEVEN_MODELOS)} caracteres (+ calentamiento)")
+    print(f"\n▶ elevenlabs: voz {voz}, modelos {modelos}")
+    print(f"  {len(FRASES)} frases × {len(modelos)} modelos = {caracteres * len(modelos)} caracteres (+ calentamiento)")
     print("  Los créditos por carácter dependen del modelo (Flash cuesta menos que Multilingual).")
     if confirmar and input("  ¿Continuar con ElevenLabs? [s/N] ").strip().lower() not in ("s", "si", "sí"):
         print("  ElevenLabs omitido.")
@@ -174,8 +175,8 @@ def correr_elevenlabs(confirmar: bool) -> list[Medicion]:
 
     cliente = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
     resultados = []
-    for modelo in ELEVEN_MODELOS:
-        motor = f"elevenlabs_{modelo.removeprefix('eleven_')}"
+    for modelo in modelos:
+        motor =f"elevenlabs_{modelo.removeprefix('eleven_')}"
         b"".join(cliente.text_to_speech.stream(voice_id=voz, text="Hola.", model_id=modelo, language_code="es"))  # calentamiento
         for frase in FRASES:
             inicio = time.perf_counter()
@@ -252,6 +253,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--motores", nargs="+", choices=TODOS, default=MOTORES_LOCALES)
     parser.add_argument("--si", action="store_true", help="no pedir confirmación para ElevenLabs")
+    parser.add_argument("--modelos-eleven", nargs="+", default=ELEVEN_MODELOS, help="model_id de ElevenLabs a probar")
     args = parser.parse_args()
     load_dotenv(Path(__file__).parent / ".env")
     DIR_SALIDA.mkdir(parents=True, exist_ok=True)
@@ -259,7 +261,7 @@ def main() -> int:
     resultados: list[Medicion] = []
     for motor in args.motores:
         if motor == "elevenlabs":
-            resultados += correr_elevenlabs(confirmar=not args.si)
+            resultados += correr_elevenlabs(confirmar=not args.si, modelos=args.modelos_eleven)
         else:
             resultados += correr_local(motor)
     if resultados:
