@@ -80,6 +80,16 @@ Prompt de sistema corto: asistente femenina, español mexicano, respuestas habla
 | ElevenLabs | Nube (plan gratuito) | `EXAVITQu4vr4xnSDxMaL` + una alternativa | Por el texto; etiquetas si el modelo/plan lo permite |
 
 ElevenLabs funciona como **referencia de calidad** ("lo mejor de la nube").
+
+**Voz de referencia para Chatterbox** (decisión):
+
+1. **Ronda 1 — voz por defecto** de Chatterbox: sin trámites, mide latencia y calidad base.
+2. **Ronda 2 — clip femenino de español de México con licencia CC0** (p. ej. Mozilla Common Voice,
+   filtrando acento México), ~10 s. El acento de la voz clonada depende de la referencia, así que esta
+   ronda dice si Chatterbox puede sonar mexicana.
+
+No se clona audio generado por ElevenLabs (sus términos de uso probablemente no lo permiten).
+La voz definitiva de Tessia (grabación propia con permiso, voz diseñada, etc.) se decide después del experimento.
 También se revisa si existe un finetune de Chatterbox para español latino/mexicano y bajo qué licencia.
 
 ## 4. Frases de prueba
