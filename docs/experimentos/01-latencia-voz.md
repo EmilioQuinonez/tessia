@@ -237,6 +237,32 @@ Observaciones:
 **Decisión preliminar**: usar `thinking_low` (adaptive, effort `low`). Misma latencia y deja margen para razonar cuando
 haya herramientas. Se revalida en la etapa B.
 
+### 11.2 TTS — latencia (2026-11-25)
+
+Script: `experiments/voz/tts_bench.py`. 19 frases por motor, una corrida cada una (tras calentamiento).
+Locales: síntesis oración por oración, TTFA = primera oración. ElevenLabs: streaming nativo, TTFA = primer fragmento.
+
+| Motor | Dónde corre | TTFA p50 | TTFA máx. | RTF p50 |
+|---|---|---|---|---|
+| Piper `es_MX-claude-high` | Local, CPU | **62 ms** | 130 ms | 0.02 |
+| ElevenLabs Flash v2.5 | Nube | **179 ms** | 399 ms | — |
+| ElevenLabs Multilingual v2 | Nube | **345 ms** | 475 ms | — |
+| Kokoro `ef_dora` | Local, CPU | **350 ms** | 735 ms | 0.12 |
+| Chatterbox Multilingual (voz por defecto) | Local, GPU Mac (MPS) | **14.5 s** | 131 s | 4.14 |
+
+Observaciones:
+
+- **Chatterbox no es viable en la Mac**: ~4× más lento que tiempo real (tarda 4 s por cada segundo de audio).
+  Además, en E6 generó 13.7 s de audio para una frase de ~3 s (alucinación/silencio largo, revisar al escuchar).
+  Para usarlo en conversación se necesita GPU NVIDIA (la PC) → pendiente medirlo ahí.
+  **Implicación de hardware**: una Mac mini como servidor no podría correr Chatterbox en tiempo real.
+- **Piper, Kokoro y ElevenLabs caben en el presupuesto** (150–400 ms).
+- Los motores locales dependen de la longitud de la primera oración (L1 es el peor caso); ElevenLabs casi no, por su streaming.
+
+### 11.3 TTS — calificaciones de Emilio
+
+_Pendiente._
+
 ## 12. Conclusiones y recomendación
 
 _Pendiente._
