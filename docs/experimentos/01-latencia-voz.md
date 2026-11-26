@@ -264,6 +264,38 @@ Observaciones:
   (precios por 1,000 caracteres: Flash v2.5 y v4 Turbo $0.04; Multilingual v2 y v4 $0.08).
 - Los motores locales dependen de la longitud de la primera oración (L1 es el peor caso); ElevenLabs casi no, por su streaming.
 
+### 11.4 STT — Whisper local (2026-11-25)
+
+Script: `experiments/voz/stt_bench.py`. 24 grabaciones de Emilio (19 frases + 5 órdenes), grabadas con **AirPods Pro**
+(Bluetooth, 16 kHz; la MacBook estaba cerrada en el dock y su micrófono interno queda apagado).
+Modelo precargado en todos los motores; latencia = mediana de 3 repeticiones.
+
+| Motor | Latencia p50 | p90 | WER prom. | Exactas | Nombre (N1) |
+|---|---|---|---|---|---|
+| mlx-whisper large-v3-turbo | **716 ms** | 741 ms | 5.4 % | 16/24 | "Quiñones" |
+| mlx-whisper turbo + prompt de vocabulario | 716 ms | 743 ms | **4.9 %** | 16/24 | "Quiñones" |
+| whisper.cpp large-v3-turbo (Metal) | 796 ms | 817 ms | 5.4 % | 16/24 | "Quiñones" |
+| mlx-whisper small | **224 ms** | 250 ms | 15.7 % | 7/24 | "Quiñones" |
+| whisper.cpp small (Metal) | 223 ms | 254 ms | 15.5 % | 6/24 | "Quiñones" |
+
+Observaciones:
+
+- **Turbo es muy preciso**: buena parte de su WER son equivalencias, no errores ("siete y media" vs "7:30",
+  "wifi" vs "Wi-Fi"). Errores reales: "tiene" por "tienes", "Recuerda me … el doctor" por "Recuérdame … al doctor",
+  "suba 24" por "sube a 24". Entiende "Tessia", "Natalia Lafourcade", "Órale", "Apple Music", "HomePod", "AirPlay".
+- **Small no sirve**: falla justo en lo importante ("te si" por "Tessia", "Natalia a la burcade", "ahora le quema la onda" por "Órale…").
+- **"Quiñonez" sale "Quiñones" en todos**: en español mexicano suenan igual (seseo); ni el prompt lo corrige.
+  No afecta la comprensión del LLM; para nombres escritos (contactos) se debe resolver con búsqueda aproximada.
+- **El prompt de vocabulario ayuda poco** (corrigió "Wi-Fi"), sin costo de latencia → se usará.
+- **mlx-whisper es ~80 ms más rápido que whisper.cpp** con la misma precisión.
+- **⚠️ Latencia fuera de presupuesto (716 ms vs. 150–400 ms)** y casi constante sin importar la duración del audio:
+  Whisper procesa siempre una ventana de 30 s. Reducir la ventana en whisper.cpp (`audio_ctx`) lo acelera pero
+  destruye la precisión (768 → 401 ms con WER 17.9 %; 512 → 295 ms con WER 92 %). No es viable.
+
+**Estimado E2E con lo medido**: VAD (~300–500 ms) + STT (~720 ms) + LLM primera oración (~580 ms) + TTS (~240 ms)
+≈ **1.8–2.0 s**, por encima de la meta de 1.5 s. Opciones a evaluar (ver §12):
+transcripción en streaming / generación anticipada en la etapa B, STT en la nube en streaming, o STT en la GPU de la PC.
+
 ### 11.3 TTS — calificaciones de Emilio (2026-11-25)
 
 Escucha de las 19 frases por motor (`salidas/tts/escuchar.html`). Evaluación cualitativa:
