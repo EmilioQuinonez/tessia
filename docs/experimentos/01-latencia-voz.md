@@ -31,6 +31,10 @@ Validar, **antes de construir Tessia**, que la arquitectura propuesta para la v2
 Wake word, satélites, app de iPhone, herramientas (música, foco), memoria,
 speaker ID y pruebas en la PC con CUDA (experimento aparte).
 
+- **Respaldo sin internet** (router local + LLM pequeño vía Ollama, p. ej. `qwen2.5:3b`): experimento futuro,
+  junto con el diseño del router de comandos. Los comandos simples no deberían necesitar un LLM, así que el
+  modelo local solo cubriría conversación sin conexión; se evaluarán los modelos pequeños disponibles en ese momento.
+
 ## 2. Hipótesis de presupuesto de latencia
 
 Desglose estimado para llegar a la primera palabra. Es una **hipótesis**: el experimento la confirma o la corrige.
