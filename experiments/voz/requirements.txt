@@ -1,0 +1,15 @@
+# Experimento 01 — latencia y naturalidad de voz (spike, no producción)
+# LLM y TTS en la nube
+anthropic
+elevenlabs
+# STT local (Apple Silicon)
+mlx-whisper
+# TTS locales
+chatterbox-tts
+kokoro
+piper-tts
+# Utilidades
+jiwer            # WER del STT
+sounddevice      # micrófono/bocinas
+soundfile
+python-dotenv
