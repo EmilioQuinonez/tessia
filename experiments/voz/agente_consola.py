@@ -49,6 +49,7 @@ from livekit.agents import (
 from livekit.agents.types import NOT_GIVEN, NotGivenOr
 from livekit.agents.utils import AudioBuffer, is_given
 from livekit.plugins import anthropic, elevenlabs, silero
+from livekit.plugins.turn_detector.multilingual import MultilingualModel  # debe importarse en el hilo principal
 
 load_dotenv(Path(__file__).parent / ".env")
 
@@ -194,6 +195,7 @@ class Registro:
 
 def prewarm(proc: JobProcess) -> None:
     proc.userdata["vad"] = silero.VAD.load(min_silence_duration=SILENCIO_VAD_S)
+    proc.userdata["stt"] = MlxWhisperSTT(MODELO_STT, PROMPT_VOCABULARIO)  # precarga fuera del loop del agente
 
 
 server = AgentServer(setup_fnc=prewarm)
@@ -209,13 +211,11 @@ async def entrypoint(ctx: JobContext) -> None:
     if os.environ.get("DETECTOR", "multilingual") == "vad":
         turnos["turn_detection"] = "vad"
     else:
-        from livekit.plugins.turn_detector.multilingual import MultilingualModel
-
         turnos["turn_detection"] = MultilingualModel()
 
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
-        stt=MlxWhisperSTT(MODELO_STT, PROMPT_VOCABULARIO),
+        stt=ctx.proc.userdata["stt"],
         llm=HaikuLLM(),
         tts=elevenlabs.TTS(
             voice_id=os.environ.get("ELEVENLABS_VOICE_ID") or "EXAVITQu4vr4xnSDxMaL",
