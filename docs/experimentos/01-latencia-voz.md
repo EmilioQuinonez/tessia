@@ -264,6 +264,33 @@ Observaciones:
   (precios por 1,000 caracteres: Flash v2.5 y v4 Turbo $0.04; Multilingual v2 y v4 $0.08).
 - Los motores locales dependen de la longitud de la primera oración (L1 es el peor caso); ElevenLabs casi no, por su streaming.
 
+### 11.3 TTS — calificaciones de Emilio (2026-11-25)
+
+Escucha de las 19 frases por motor (`salidas/tts/escuchar.html`). Evaluación cualitativa:
+
+| Lugar | Motor | Naturalidad | Pronunciación | Emociones | Comentarios |
+|---|---|---|---|---|---|
+| 1 | **ElevenLabs v4 Turbo** | Excelente; "suena igual que v4" | Buena | ✅ | "Mil veces mejor que Flash v2.5". **Ganador** |
+| 1 | ElevenLabs v4 | Excelente | Buena | ✅ | Igual a v4 Turbo, pero 590 ms y el doble de precio |
+| 2 | ElevenLabs Multilingual v2 | Excelente, "increíble" | Buena | ✅ Se notan sin exagerar | La mejor de la primera corrida |
+| 3 | ElevenLabs Flash v2.5 | Muy buena | Buena; algunas frases suenan raras | ✅ Se detectan, a veces forzadas o muy marcadas | Muy por encima de los locales |
+| 4 | Kokoro `ef_dora` | Buena (voz conocida de la v1) | Buena | ❌ | La mejor local |
+| 5 | Piper `es_MX-claude-high` | Aceptable para su velocidad | ❌ Falla en acentos y algunas palabras | ❌ | Útil solo por rapidez |
+| 6 | Chatterbox (voz por defecto) | ❌ | ❌ | ❌ | Ruidos de fondo, habla en otro idioma, voz masculina |
+
+Conclusiones:
+
+- **Ninguna TTS local maneja emociones.** Solo ElevenLabs cumple el criterio de emociones (§7).
+- **ElevenLabs v4 Turbo es la TTS elegida**: calidad de v4 (la máxima), 240 ms p50, $0.04 por 1,000 caracteres
+  (igual que Flash) y soporte de etiquetas de audio para emociones (a probar en la etapa B).
+- **Chatterbox se descarta en la Mac** (calidad y latencia). La ronda 2 (clip mexicano CC0) no se corre en la Mac;
+  solo tendría sentido en la PC con CUDA, como experimento aparte.
+- **Kokoro queda como mejor opción local** (respaldo sin internet / respuestas cortas).
+
+**Implicación importante**: la decisión de la v2 asumía TTS local (Chatterbox) y que el único gasto sería el LLM.
+Si la voz principal es ElevenLabs, la voz pasa a ser **un gasto mensual en la nube** y deja de ser local.
+Hay que estimar el costo con uso real y considerar un esquema híbrido (ver §12).
+
 ### 11.4 STT — Whisper local (2026-11-25)
 
 Script: `experiments/voz/stt_bench.py`. 24 grabaciones de Emilio (19 frases + 5 órdenes), grabadas con **AirPods Pro**
@@ -295,33 +322,6 @@ Observaciones:
 **Estimado E2E con lo medido**: VAD (~300–500 ms) + STT (~720 ms) + LLM primera oración (~580 ms) + TTS (~240 ms)
 ≈ **1.8–2.0 s**, por encima de la meta de 1.5 s. Opciones a evaluar (ver §12):
 transcripción en streaming / generación anticipada en la etapa B, STT en la nube en streaming, o STT en la GPU de la PC.
-
-### 11.3 TTS — calificaciones de Emilio (2026-11-25)
-
-Escucha de las 19 frases por motor (`salidas/tts/escuchar.html`). Evaluación cualitativa:
-
-| Lugar | Motor | Naturalidad | Pronunciación | Emociones | Comentarios |
-|---|---|---|---|---|---|
-| 1 | **ElevenLabs v4 Turbo** | Excelente; "suena igual que v4" | Buena | ✅ | "Mil veces mejor que Flash v2.5". **Ganador** |
-| 1 | ElevenLabs v4 | Excelente | Buena | ✅ | Igual a v4 Turbo, pero 590 ms y el doble de precio |
-| 2 | ElevenLabs Multilingual v2 | Excelente, "increíble" | Buena | ✅ Se notan sin exagerar | La mejor de la primera corrida |
-| 3 | ElevenLabs Flash v2.5 | Muy buena | Buena; algunas frases suenan raras | ✅ Se detectan, a veces forzadas o muy marcadas | Muy por encima de los locales |
-| 4 | Kokoro `ef_dora` | Buena (voz conocida de la v1) | Buena | ❌ | La mejor local |
-| 5 | Piper `es_MX-claude-high` | Aceptable para su velocidad | ❌ Falla en acentos y algunas palabras | ❌ | Útil solo por rapidez |
-| 6 | Chatterbox (voz por defecto) | ❌ | ❌ | ❌ | Ruidos de fondo, habla en otro idioma, voz masculina |
-
-Conclusiones:
-
-- **Ninguna TTS local maneja emociones.** Solo ElevenLabs cumple el criterio de emociones (§7).
-- **ElevenLabs v4 Turbo es la TTS elegida**: calidad de v4 (la máxima), 240 ms p50, $0.04 por 1,000 caracteres
-  (igual que Flash) y soporte de etiquetas de audio para emociones (a probar en la etapa B).
-- **Chatterbox se descarta en la Mac** (calidad y latencia). La ronda 2 (clip mexicano CC0) no se corre en la Mac;
-  solo tendría sentido en la PC con CUDA, como experimento aparte.
-- **Kokoro queda como mejor opción local** (respaldo sin internet / respuestas cortas).
-
-**Implicación importante**: la decisión de la v2 asumía TTS local (Chatterbox) y que el único gasto sería el LLM.
-Si la voz principal es ElevenLabs, la voz pasa a ser **un gasto mensual en la nube** y deja de ser local.
-Hay que estimar el costo con uso real y considerar un esquema híbrido (ver §12).
 
 ## 12. Conclusiones y recomendación
 
